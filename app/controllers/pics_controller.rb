@@ -1,6 +1,7 @@
 class PicsController < ApplicationController
   before_action :find_pic, only: [:show, :edit, :update, :destroy, :upvote]
   before_action :authenticate_user!, except: [:index, :show]
+  before_action :permission, only: [:edit, :update, :destroy]
   def index
     @pics = Pic.all.order("created_at DESC")
   end
@@ -41,8 +42,11 @@ class PicsController < ApplicationController
 
   def upvote
     @pic.upvote_by current_user
-    redirect_to :back
+    respond_to do |format|
+      format.js
+    end
   end
+
   private
 
   def pic_params
@@ -51,5 +55,11 @@ class PicsController < ApplicationController
 
   def find_pic
     @pic = Pic.find(params[:id])
+  end
+
+  def permission
+    if current_user.email != @pic.user.email
+      render 'show'
+    end
   end
 end
